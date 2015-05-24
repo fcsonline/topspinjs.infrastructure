@@ -1,0 +1,35 @@
+---
+
+- hosts: all
+  vars_files:
+    - vars.yml
+  remote_user: vagrant
+  sudo: no
+
+  tasks:
+
+    - name: checkouts the topspinjs repository
+      git: repo=https://github.com/fcsonline/topspinjs.git dest=/home/{{ user }}/{{ user }}
+      sudo_user: "{{ user }}"
+      sudo: yes
+
+    - name: Ensures that the shared folder is created
+      action: file path=/home/{{ user }}/shared state=directory
+      sudo_user: "{{ user }}"
+      sudo: yes
+
+    - name: Install package.json modules
+      npm: path=/home/{{ user }}/{{ user }} state=latest
+      sudo_user: "{{ user }}"
+      sudo: yes
+
+    - name: Migrates the database to the last version
+      command: ./node_modules/knex/lib/bin/cli.js migrate:latest
+      sudo_user: "{{ user }}"
+      sudo: yes
+      args:
+        chdir: /home/{{ user }}/{{ user }}
+
+  handlers:
+    - name: restart nginx
+      service: name=nginx state=restarted
